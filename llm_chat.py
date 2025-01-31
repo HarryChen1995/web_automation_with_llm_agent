@@ -33,7 +33,7 @@ def summarize_web_content_from_link(link: str):
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
 def query_or_respond(state: MessagesState):
     """Generate tool call for retrieval or respond."""
-    llm_with_tools = llm.bind_tools([look_up_internet, summarize_web_content_from_link]) if any(map(lambda x: x in state["messages"][-1].content.lower(), ["online", "search", "visit", "www"])) else llm
+    llm_with_tools = llm.bind_tools([look_up_internet, summarize_web_content_from_link])
     response = llm_with_tools.invoke(state["messages"])
     # MessagesState appends messages to state instead of overwriting
     return {"messages": [response]}
@@ -58,7 +58,7 @@ def generate_search_response(state: MessagesState):
     system_message_content = ''
     if tool_messages:
         
-        system_message_content = "your google search agent, base on search url results " +  "\n".join([tool_message.content for tool_message in tool_messages]) + "in a table, please response in markdown format"
+        system_message_content = "your google search agent, summarize url results " +  "\n".join([tool_message.content for tool_message in tool_messages]) + "in a table, please response in markdown format"
     
     conversation_messages = [
         message

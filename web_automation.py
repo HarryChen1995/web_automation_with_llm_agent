@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from langchain_community.document_loaders import WebBaseLoader
 import time
-
+import re
 
 
 
@@ -19,7 +19,7 @@ def google_search(driver, query:str):
     driver.get(f"https://www.google.com/search?q={query}")
     time.sleep(7)
     cites = driver.find_elements(By.XPATH, '//cite')
-    urls = list(map(lambda x:x.text.split(" › ")[0], filter(lambda x:  x.text, cites)))
+    urls = list(map(lambda x:x.text.split(" › ")[0], filter(lambda x:  x.text and re.match(r"^http(s)?://", x.text), cites)))
     return urls
     
     
