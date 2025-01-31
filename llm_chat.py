@@ -25,16 +25,15 @@ def search_internet(query: str):
 
 
 @tool
-def go_web_link(link: str):
-    """got to web link."""
-    html = go_to_web_page(driver, link)
-    return html
-
+def summarize_web_content_from_link(link: str):
+    """summarize web content from link."""
+    pages = go_to_web_page(driver, link)
+    return "".join([page.page_content for page in pages])
 
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
 def query_or_respond(state: MessagesState):
     """Generate tool call for retrieval or respond."""
-    llm_with_tools = llm.bind_tools([search_internet, go_web_link])
+    llm_with_tools = llm.bind_tools([search_internet, summarize_web_content_from_link])
     response = llm_with_tools.invoke(state["messages"])
     # MessagesState appends messages to state instead of overwriting
     return {"messages": [response]}
@@ -42,7 +41,7 @@ def query_or_respond(state: MessagesState):
 
 # Step 2: Execute the retrieval.
 search_internet_tool = ToolNode([search_internet], name = "search_internet_tool")
-go_web_link_tool = ToolNode([go_web_link], name = "go_web_link_tool")
+summarize_web_content_from_link_tool = ToolNode([summarize_web_content_from_link], name = "summarize_web_content_from_link_tool")
 
 # Step 3: Generate a response using the retrieved content.
 def generate_search_response(state: MessagesState):
@@ -92,7 +91,7 @@ def generate_visit_link_response(state: MessagesState):
     system_message_content = ''
     if tool_messages:
         
-        system_message_content = "your google search agent, after visit link, summarize web content" + {"\n".join([page.page_content for page in tool_messages[0].content])} + "in a table, please response in markdown format"
+        system_message_content = "your google search agent, summarize web content" +  tool_messages[0].content + "in a table, please response in markdown format"
     
     conversation_messages = [
         message
@@ -126,7 +125,7 @@ graph_builder = StateGraph(MessagesState)
 
 graph_builder.add_node(query_or_respond)
 graph_builder.add_node(search_internet_tool)
-graph_builder.add_node(go_web_link_tool)
+graph_builder.add_node(summarize_web_content_from_link_tool)
 graph_builder.add_node(generate_search_response)
 graph_builder.add_node(generate_visit_link_response)
 
@@ -134,10 +133,10 @@ graph_builder.set_entry_point("query_or_respond")
 graph_builder.add_conditional_edges(
     "query_or_respond",
     route_by_message_state,
-    {"END": END, "search_internet": "search_internet_tool", "go_web_link":"go_web_link_tool"},
+    {"END": END, "search_internet": "search_internet_tool", "summarize_web_content_from_link":"summarize_web_content_from_link_tool"},
 )
 graph_builder.add_edge("search_internet_tool", "generate_search_response")
-graph_builder.add_edge("go_web_link_tool", "generate_visit_link_response")
+graph_builder.add_edge("summarize_web_content_from_link_tool", "generate_visit_link_response")
 graph_builder.add_edge("generate_search_response", END)
 graph_builder.add_edge("generate_visit_link_response", END)
 

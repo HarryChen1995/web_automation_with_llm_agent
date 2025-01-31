@@ -9,11 +9,7 @@ config = {"configurable": {"thread_id": "test123"}}
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-def stream_output(prompt):
-    response = graph.invoke(
-                {"messages": [( "user",  prompt)]},
-                config=config)
-    message = response["messages"][-1].content
+def stream_output(message):
     for i in message:
        time.sleep(0.03)
        yield i 
@@ -31,5 +27,9 @@ if prompt := st.chat_input("ask agent a question"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
         with st.spinner("responding..."):
-            response = st.write_stream(stream_output(prompt))
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            response = graph.invoke(
+                {"messages": [( "user",  prompt)]},
+                config=config)
+            message = response["messages"][-1].content
+        response = st.write_stream(stream_output(message))
+        st.session_state.messages.append({"role": "assistant", "content": response})
