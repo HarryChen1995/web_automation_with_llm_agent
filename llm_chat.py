@@ -2,11 +2,10 @@ from langchain_core.messages import SystemMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from langchain_ollama import OllamaEmbeddings
 from langchain_ollama import ChatOllama
 from web_automation import google_search, driver, go_to_web_page
 
-embeddings = OllamaEmbeddings(model="llama3.2")
+
 
 llm = ChatOllama(model="llama3.2")
 
